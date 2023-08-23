@@ -1,6 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 const Twit = require('twit');
-require('dotenv').config(); // Load environment variables from .env
+require('dotenv').config(); 
 
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
 const twitterConfig = {
@@ -10,19 +10,31 @@ const twitterConfig = {
   access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET
 };
 
+
 const bot = new TelegramBot(telegramBotToken, { polling: true });
+
 const twitter = new Twit(twitterConfig);
 
-bot.on('message', (msg) => {
+bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
-  const message = msg.text;
+  bot.sendMessage(chatId, 'Welcome to TweetLearnings!');
+});
 
-  twitter.post('statuses/update', { status: `Message from user ${chatId}: ${message}` }, (err, data, response) => {
+bot.onText(/\/tweet (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const tweetText = match[1];
+
+  twitter.post('statuses/update', { status: tweetText }, (err, data, response) => {
     if (err) {
       bot.sendMessage(chatId, `Tweeting failed: ${err.message}`);
     } else {
       bot.sendMessage(chatId, 'Message tweeted successfully!');
     }
-    console.log(msg);
   });
+});
+
+bot.onText(/\/stop/, (msg) => {
+  const chatId = msg.chat.id;
+  bot.sendMessage(chatId, 'Stopping the bot. Goodbye!');
+  bot.stopPolling();
 });
