@@ -10,27 +10,32 @@ const twitterConfig = {
   access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET
 };
 
-
 const bot = new TelegramBot(telegramBotToken, { polling: true });
+
 
 const twitter = new Twit(twitterConfig);
 
+
+const welcomedUsers = new Set();
+
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
-  bot.sendMessage(chatId, 'Welcome to TweetLearnings!');
+
+
+  if (!welcomedUsers.has(chatId)) {
+    bot.sendMessage(chatId, 'Welcome to TweetLearnings!😃\n\n' +
+      'Commands:\n' +
+      '/start - Starting the Bot👋\n' +
+      '/tweet <message> - Tweet the provided message🕊️\n' +
+      '/stop - Stop the bot⛔');
+    welcomedUsers.add(chatId); 
+  } else {
+    bot.sendMessage(chatId, 'You are already welcomed. Type /start to see the available commands.');
+  }
 });
 
 bot.onText(/\/tweet (.+)/, (msg, match) => {
-  const chatId = msg.chat.id;
-  const tweetText = match[1];
 
-  twitter.post('statuses/update', { status: tweetText }, (err, data, response) => {
-    if (err) {
-      bot.sendMessage(chatId, `Tweeting failed: ${err.message}`);
-    } else {
-      bot.sendMessage(chatId, 'Message tweeted successfully!');
-    }
-  });
 });
 
 bot.onText(/\/stop/, (msg) => {
